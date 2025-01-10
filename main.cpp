@@ -1,12 +1,10 @@
-#include <iostream>
 #include "entities.hpp"
+#include <iostream>
 
 #define WIN_X 800
 #define WIN_Y 600
 
-void print_v(const v3f& v) {
-    std::cout << v.x << ", " << v.y << ", " << v.z << std::endl;
-}
+void print_v(const v3f &v) { std::cout << v.x << ", " << v.y << ", " << v.z << std::endl; }
 
 int main() {
     // Create the main window
@@ -27,13 +25,11 @@ int main() {
     float time = 0.0;
 
     // Start the game loop
-    while (window.isOpen())
-    {
+    while (window.isOpen()) {
         time += 0.001;
         // Process events
         sf::Event event;
-        while (window.pollEvent(event))
-        {
+        while (window.pollEvent(event)) {
             // Close window: exit
             if (event.type == sf::Event::Closed) {
                 window.close();
@@ -87,7 +83,7 @@ int main() {
         ship1.Rotate(v3f{1, 0, 0}, 0.0001);
         ship2.Rotate(v3f{0, 1, 0}, 0.0001);
         ship3.setPos(newpos);
- 
+
         // Update the window
         window.display();
     }

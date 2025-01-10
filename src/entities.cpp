@@ -1,7 +1,7 @@
 #include "entities.hpp"
 #include "linalg.hpp"
 
-void SpaceShip::Draw(sf::RenderWindow& window, const Camera& from) const {
+void SpaceShip::Draw(sf::RenderWindow &window, const Camera &from) const {
     v2f win_size = v2f(window.getSize());
     win_size.x /= 2.0;
     win_size.y /= 2.0;
@@ -17,7 +17,8 @@ void SpaceShip::Draw(sf::RenderWindow& window, const Camera& from) const {
         float cosine = dot(l, bas.as_vec(2));
         float d = from.D / pow(cosine, 0.7);
 
-        if (d < 0) continue;
+        if (d < 0)
+            continue;
 
         // Vector from center to intersection point
         v3f p = l * d - bas.as_vec(2) * from.D;
@@ -39,4 +40,3 @@ void SpaceShip::Draw(sf::RenderWindow& window, const Camera& from) const {
 
     window.draw(lines);
 }
-
