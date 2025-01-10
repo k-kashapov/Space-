@@ -10,16 +10,19 @@ void SpaceShip::Draw(sf::RenderWindow& window, const Camera& from) const {
     m33 bas = from.getBasis();
 
     for (size_t point = 0; point < model.size(); ++point) {
-        v3f l = model[point] - from.getPos();
+        v3f l = pos + matmul(model[point], basis) - from.getPos();
         l /= norm(l);
 
         // Intersect with plane
-        float d = from.D / dot(l, bas[2]);
+        float cosine = dot(l, bas.as_vec(2));
+        float d = from.D / pow(cosine, 0.7);
+
+        if (d < 0) continue;
 
         // Vector from center to intersection point
-        v3f p = l * d - bas[2] * from.D;
+        v3f p = l * d - bas.as_vec(2) * from.D;
 
-        projections[point] = {dot(p, bas[0]) * 10, dot(p, bas[1]) * 10};
+        projections[point] = {dot(p, bas.as_vec(0)) * 10, dot(p, bas.as_vec(1)) * 10};
         projections[point] += win_size;
     }
 

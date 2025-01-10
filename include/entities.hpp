@@ -3,9 +3,7 @@
 #include <SFML/Main.hpp>
 #include <SFML/Graphics.hpp>
 
-using v2f = sf::Vector2f;
-using v3f = sf::Vector3f;
-using m33 = std::vector<v3f>;
+#include "linalg.hpp"
 
 class Camera;
 
@@ -13,9 +11,9 @@ class SpaceObj {
 protected:
     v3f pos = {0, 0, 0};
     m33 basis = {
-        {1, 0, 0},
-        {0, 1, 0},
-        {0, 0, 1},
+        {1.0, 0.0, 0.0},
+        {0.0, 1.0, 0.0},
+        {0.0, 0.0, 1.0},
     };
 
 public:
@@ -33,6 +31,10 @@ public:
 
     void setBasis(const m33& new_b) {
         basis = new_b;
+    }
+
+    void Rotate(const v3f& axis, float angle) {
+        basis = rotate(basis, axis, angle);
     }
 
     virtual void Draw(sf::RenderWindow& window, const Camera& from) const = 0;
@@ -62,8 +64,8 @@ public:
 };
 
 class Camera final : public SpaceObj {
-    float mov_spd = 5.0;
-    float FOV = 90.0;
+    float mov_spd = 10.0;
+    float rot_spd = 0.03;
 
 public:
     float getSpd() const {
@@ -75,8 +77,12 @@ public:
     }
 
     // Distance to plane
-    const float D = 10.0;
+    const float D = 50.0;
     void Draw(sf::RenderWindow& window, const Camera& from) const override {};
+
+    void Rotate(const v3f& axis) {
+        basis = rotate(basis, axis, rot_spd);
+    }
 };
 
 class Player final : public SpaceShip {
