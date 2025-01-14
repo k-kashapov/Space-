@@ -6,6 +6,8 @@ float norm2(const v3f &v) { return dot(v, v); }
 
 float norm(const v3f &v) { return std::sqrt(norm2(v)); }
 
+v3f normalized(const v3f &v) { return v / norm(v); }
+
 v3f matmul(const v3f &v, const m33 &m) {
     m33 trans = m.transpose();
     return {dot(v, trans.as_vec(0)), dot(v, trans.as_vec(1)), dot(v, trans.as_vec(2))};
@@ -22,9 +24,9 @@ v3f operator*(v3f a, v3f b) {
 
 // Rodrigues' rotation formula
 v3f rotate(const v3f &v, const v3f &axis, float angle) {
-    float l = norm(axis);
-    return v * std::cos(angle) + (axis * v) * std::sin(angle) / l +
-           axis * dot(axis, v) * (1 - std::cos(angle)) / l;
+    v3f ax = normalized(axis);
+    return v * std::cos(angle) + (ax * v) * std::sin(angle) +
+           ax * dot(ax, v) * (1 - std::cos(angle));
 }
 
 m33 rotate(const m33 &m, const v3f &axis, float angle) {

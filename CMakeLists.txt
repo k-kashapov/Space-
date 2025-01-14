@@ -2,12 +2,14 @@ cmake_minimum_required(VERSION 3.10.0 FATAL_ERROR)
 project(spp)
 
 # set(CMAKE_EXPORT_COMPILE_COMMANDS True)
+set(CXX_STANDARD C++20)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG ")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG -ggdb3 -fsanitize=undefined")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -ggdb3 ")
 
-set(HEADERS include/entities.hpp include/linalg.hpp)
-set(SOURCES src/entities.cpp src/linalg.cpp ${HEADERS})
+set(HEADERS include/entities.hpp include/linalg.hpp include/models.hpp)
+set(SOURCES src/entities.cpp src/linalg.cpp src/models.cpp ${HEADERS})
 add_executable(game main.cpp ${SOURCES})
 target_include_directories(game PUBLIC include)
 target_link_libraries(game PRIVATE sfml-system sfml-graphics sfml-window)

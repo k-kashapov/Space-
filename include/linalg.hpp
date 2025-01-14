@@ -5,8 +5,6 @@
 #include <array>
 #include <cmath>
 
-#include <iostream>
-
 using v2f = sf::Vector2f;
 using v3f = sf::Vector3f;
 
@@ -53,7 +51,11 @@ float norm2(const v3f &v);
 
 float norm(const v3f &v);
 
+v3f normalized(const v3f &v);
+
 v3f matmul(const v3f &v, const m33 &m);
+
+v3f operator*(v3f a, v3f b);
 
 v3f rotate(const v3f &v, const v3f &axis, float angle);
 

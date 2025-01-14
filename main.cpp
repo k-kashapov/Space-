@@ -1,32 +1,42 @@
 #include "entities.hpp"
+#include "manager.hpp"
 #include <iostream>
+#include <set>
 
 #define WIN_X 800
 #define WIN_Y 600
+#define MAX_FPS 60
 
 void print_v(const v3f &v) { std::cout << v.x << ", " << v.y << ", " << v.z << std::endl; }
 
 int main() {
     // Create the main window
-    sf::RenderWindow window(sf::VideoMode({WIN_X, WIN_Y}), "Space--");
+    sf::RenderWindow window(sf::VideoMode(WIN_X, WIN_Y, 1), "Space--");
+    window.setFramerateLimit(MAX_FPS);
+    window.setKeyRepeatEnabled(false);
 
-    SpaceShip ship1;
-    SpaceShip ship2;
-    SpaceShip ship3;
+    Manager man;
+    auto ship1 = man.AddObj<SpaceShip>("ship1", {0, 0, 0});
+    auto ship2 = man.AddObj<SpaceShip>("ship2", {0, 2000, 0});
+    auto ship3 = man.AddObj<SpaceShip>("ship3", {0, 1200, 1200});
 
-    ship1.setPos(v3f{0, 0, 0});
-    ship2.setPos(v3f{0, 200, 0});
-    ship3.setPos(v3f{0, 120, 120});
+    man.AddObj<SpaceShip>("ship4", {0, -1200, 1200});
 
-    Camera cam;
+    man.AddObj<SpaceShip>("ship5", {1500, 0, 0});
 
-    cam.setPos(v3f{0, 0, -200});
+    auto player = man.AddObj<SpaceShip>("Player", {0, 0, -1000});
+
+    std::shared_ptr<Camera> cam = man.AddObj<Camera>("Camera", {0, 0, -200});
+    cam->Follow(player.get());
+
+    std::set<sf::Keyboard::Key> activeKeys;
+
+    bool zaWardo = false;
 
     float time = 0.0;
-
+    float delta = 1.0 / MAX_FPS;
     // Start the game loop
     while (window.isOpen()) {
-        time += 0.001;
         // Process events
         sf::Event event;
         while (window.pollEvent(event)) {
@@ -35,54 +45,55 @@ int main() {
                 window.close();
             }
 
-            if (event.type == sf::Event::KeyPressed) {
-                float spd = cam.getSpd();
+            if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Key::P) {
+                zaWardo = !zaWardo;
+            }
 
-                if (event.key.code == sf::Keyboard::Key::W) {
-                    cam.Move(spd * cam.getBasis().as_vec(2));
-                }
-                if (event.key.code == sf::Keyboard::Key::S) {
-                    cam.Move(-spd * cam.getBasis().as_vec(2));
-                }
-                if (event.key.code == sf::Keyboard::Key::E) {
-                    cam.Move(spd * cam.getBasis().as_vec(0));
-                }
-                if (event.key.code == sf::Keyboard::Key::Q) {
-                    cam.Move(-spd * cam.getBasis().as_vec(0));
-                }
-                if (event.key.code == sf::Keyboard::Key::R) {
-                    cam.Move(-spd * cam.getBasis().as_vec(1));
-                }
-                if (event.key.code == sf::Keyboard::Key::F) {
-                    cam.Move(spd * cam.getBasis().as_vec(1));
-                }
-                if (event.key.code == sf::Keyboard::Key::A) {
-                    cam.Rotate(-cam.getBasis().as_vec(1));
-                }
-                if (event.key.code == sf::Keyboard::Key::D) {
-                    cam.Rotate(cam.getBasis().as_vec(1));
-                }
-                if (event.key.code == sf::Keyboard::Key::C) {
-                    cam.Rotate(cam.getBasis().as_vec(2));
-                }
-                if (event.key.code == sf::Keyboard::Key::Z) {
-                    cam.Rotate(-cam.getBasis().as_vec(2));
-                }
+            if (event.type == sf::Event::KeyPressed) {
+                activeKeys.insert(event.key.code);
+            } else if (event.type == sf::Event::KeyReleased) {
+                activeKeys.erase(event.key.code);
             }
         }
+
+        for (auto key : activeKeys) {
+            switch (key) {
+            case sf::Keyboard::Key::W:
+                player->Rotate(player->GetBasis().as_vec(0), -player->GetRotSpd());
+                break;
+            case sf::Keyboard::Key::S:
+                player->Rotate(player->GetBasis().as_vec(0), player->GetRotSpd());
+                break;
+            case sf::Keyboard::Key::A:
+                player->Rotate(player->GetBasis().as_vec(2), -player->GetRotSpd());
+                break;
+            case sf::Keyboard::Key::D:
+                player->Rotate(player->GetBasis().as_vec(2), player->GetRotSpd());
+                break;
+            default:
+                break;
+            }
+        }
+
+        if (zaWardo)
+            continue;
+
+        time += 1.0 / MAX_FPS;
 
         // Clear screen
         window.clear();
 
-        ship1.Draw(window, cam);
-        ship2.Draw(window, cam);
-        ship3.Draw(window, cam);
+        // TODO: add actual update functions
+        man.Draw(window, *cam);
+        man.Update(1.0 / MAX_FPS);
 
-        v3f newpos = {100 * sinf(time / 5), 100 * cosf(time / 5), 120};
+        v3f newpos = {100 * sinf(time), 100 * cosf(time), 120};
+        ship3->SetPos(newpos);
 
-        ship1.Rotate(v3f{1, 0, 0}, 0.0001);
-        ship2.Rotate(v3f{0, 1, 0}, 0.0001);
-        ship3.setPos(newpos);
+        ship1->Rotate(v3f{1, 0, 0}, 0.01);
+        ship2->Rotate(v3f{0, 1, 0}, 0.01);
+
+        player->SetPos(player->GetPos() + player->GetBasis().as_vec(2) * player->GetSpd());
 
         // Update the window
         window.display();
