@@ -15,5 +15,26 @@ mkdir build
 cd build
 cmake -B . .. -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Release
 make
+```
+
+## Running the game
+```
+make launch
+OR
 ./bin/game
 ```
+
+## Controls
+
+```
+Q/R - Control Yaw
+W/S - Control Pitch
+A/D - Control Roll
+R/F - Accelerate/Decelerate ship
+P   - Pause the game
+```
+
+## Used resources
+
+* Font: https://fontesk.com/tecnica-typeface/
+* SFML

@@ -11,20 +11,27 @@ class Camera;
 
 class SpaceObj {
   protected:
-    v3f pos = {0, 0, 0};
+    v3f pos;
     m33 basis = {
         {1.0, 0.0, 0.0},
         {0.0, 1.0, 0.0},
         {0.0, 0.0, 1.0},
     };
 
-    float mov_spd = 10.0;
-    float rot_spd = 0.03;
+    // Linear speed and acceleration
+    float mov_acc = 1.03;
+    float mov_spd = 0.0f;
+
+    // Angular speed and acceleration
+    float ang_acc = 0.08;
+    v3f ang_spd;
+
+    float ang_damp = 1.05;
 
   public:
-    std::string name_ = "";
+    std::string name_;
 
-    SpaceObj(std::string name, v3f position) : name_(name), pos(position) {};
+    SpaceObj(std::string name, v3f position) : pos(position), name_(name) {};
 
     v3f GetPos() const { return pos; }
     void SetPos(const v3f &to) { pos = to; }
@@ -35,47 +42,67 @@ class SpaceObj {
     float GetSpd() const { return mov_spd; }
     void SetSpd(float spd) { mov_spd = spd; }
 
-    float GetRotSpd() const { return rot_spd; }
-    void SetRotSpd(float spd) { rot_spd = spd; }
+    v3f GetAngSpd() const { return ang_spd; }
+    void SetRotSpd(const v3f &spd) { ang_spd = spd; }
 
     void Rotate(const v3f &axis, float angle) { basis = rotate(basis, axis, angle); }
+
+    void AddTorque(const v3f &axis) { ang_spd += normalized(axis) * ang_acc; }
+
+    void Accelerate() {
+        if (mov_spd < EPS) {
+            mov_spd = mov_acc;
+        }
+
+        mov_spd *= mov_acc;
+    }
+
+    void Decelerate() { mov_spd /= mov_acc; }
+
     virtual void Draw(sf::RenderWindow &window, const Camera &from) const = 0;
     virtual void Update(float delta) = 0;
     virtual ~SpaceObj() {};
 };
 
 static const std::initializer_list<v3f> DefaultShipModel = {
-    {-100, 0, 0}, {0, 100, 0}, {100, 0, 0}, {0, -100, 0}, {0, 0, 100}};
+    {-100, 0, 0}, {0, 100, 0}, {100, 0, 0}, {0, -100, 0}, {0, 0, 100}, {0, 0, -100}};
 
 class SpaceShip : public SpaceObj {
-    float mov_spd;
     FullMeshModel model;
 
   public:
-    SpaceShip(std::string name, v3f position)
-        : SpaceObj(name, position), mov_spd(5.0), model(DefaultShipModel) {}
-
-    float getSpd() const { return mov_spd; }
+    SpaceShip(std::string name, v3f position) : SpaceObj(name, position), model(DefaultShipModel) {}
 
     void Draw(sf::RenderWindow &window, const Camera &from) const override;
-    void Update(float delta) override {};
+    void Update(float delta) override {
+        pos += basis.as_vec(2) * mov_spd * delta;
+
+        float l = norm(ang_spd);
+        if (l > 1e-3) {
+            Rotate(ang_spd, l * delta);
+            ang_spd /= ang_damp;
+        }
+    };
 };
 
 class Camera final : public SpaceObj {
     const SpaceObj *target = nullptr;
 
     const float follow_dist = 150.0;
-    const float follow_speed = 1e-4;
+    const float follow_speed = 9e-3;
+    const float follow_rot_spd = 2.1;
 
     // Distance to plane
-    float D = 50.0;
+    float D = 450.0;
 
-    void rotateToMatch(v3f a, v3f b) {
+    float render_dist = 2e5;
+
+    void rotateToMatch(v3f a, v3f b, float delta) {
         v3f diff = normalized(a) - normalized(b);
         float l = norm(diff);
 
         if (l > 1e-5) {
-            Rotate(-a * b, rot_spd * l);
+            Rotate(-a * b, follow_rot_spd * l * delta);
         }
     }
 
@@ -85,11 +112,14 @@ class Camera final : public SpaceObj {
     void Follow(const SpaceObj *obj) { target = obj; }
 
     float GetD() const { return D; }
-    void SetD(float newD) { D = std::clamp(newD, 10.0f, 100.0f); }
+    void SetD(float newD) { D = std::clamp(newD, 100.0f, 800.0f); }
+
+    float GetRenderDist() const { return render_dist; }
 
     void Move(const v3f &to) { pos += to; }
 
-    void Draw(sf::RenderWindow &window, const Camera &from) const override {};
+    void Draw([[maybe_unused]] sf::RenderWindow &window,
+              [[maybe_unused]] const Camera &from) const override {};
 
     void Update(float delta) override {
         m33 tgt_basis = target->GetBasis();
@@ -100,18 +130,19 @@ class Camera final : public SpaceObj {
 
         v3f diff = tgt_point - pos;
         float l = norm(diff);
-        Move(diff * l * follow_speed);
+        Move(diff * l * follow_speed * delta);
 
         v3f my_Oy = basis.as_vec(1);
         v3f my_Oz = basis.as_vec(2);
 
-        rotateToMatch(tgt_Oz, my_Oz);
-        rotateToMatch(tgt_Oy, my_Oy);
+        rotateToMatch(tgt_Oz, my_Oz, delta);
+        rotateToMatch(tgt_Oy, my_Oy, delta);
     };
 };
 
 class Player final : public SpaceShip {
   public:
-    void Draw(sf::RenderWindow &window, const Camera &from) const override {};
+    void Draw([[maybe_unused]] sf::RenderWindow &window,
+              [[maybe_unused]] const Camera &from) const override {};
     void Move(const v3f &to) { pos += to; }
 };

@@ -51,6 +51,8 @@ float norm2(const v3f &v);
 
 float norm(const v3f &v);
 
+float norml1(const v3f &v);
+
 v3f normalized(const v3f &v);
 
 v3f matmul(const v3f &v, const m33 &m);

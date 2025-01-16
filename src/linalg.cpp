@@ -6,6 +6,8 @@ float norm2(const v3f &v) { return dot(v, v); }
 
 float norm(const v3f &v) { return std::sqrt(norm2(v)); }
 
+float norml1(const v3f &v) { return std::abs(v.x) + std::abs(v.y) + std::abs(v.z); }
+
 v3f normalized(const v3f &v) { return v / norm(v); }
 
 v3f matmul(const v3f &v, const m33 &m) {
