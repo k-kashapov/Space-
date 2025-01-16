@@ -22,7 +22,7 @@ int main() {
     for (int i = 0; i < 12000; i++) {
         std::random_device rd;
         std::default_random_engine e2(rd());
-        std::uniform_real_distribution<> dist(-7e4, 7e4);
+        std::uniform_real_distribution<> dist(-2e5, 2e5);
 
         man.AddObj<SpaceShip>("ship" + std::to_string(i),
                               {static_cast<float>(dist(e2)), static_cast<float>(dist(e2)),

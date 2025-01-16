@@ -12,8 +12,8 @@ class Model_I {
     std::vector<v3f> points;
 
   public:
-    Model_I(std::initializer_list<v3f> init) : points(init) {};
-    virtual sf::VertexArray ToPrimitives2D(std::vector<v2f> screen_space_pts) const = 0;
+    Model_I(const std::initializer_list<v3f> &init) : points(init) {};
+    virtual sf::VertexArray ToPrimitives2D(const std::vector<v2f> &screen_space_pts) const = 0;
     virtual ~Model_I() {};
 
     size_t size() const { return points.size(); }
@@ -24,6 +24,6 @@ class Model_I {
 };
 
 struct FullMeshModel : public Model_I {
-    FullMeshModel(std::initializer_list<v3f> init) : Model_I(init) {};
-    sf::VertexArray ToPrimitives2D(std::vector<v2f> screen_space_pts) const override;
+    FullMeshModel(const std::initializer_list<v3f> &init) : Model_I(init) {};
+    sf::VertexArray ToPrimitives2D(const std::vector<v2f> &screen_space_pts) const override;
 };

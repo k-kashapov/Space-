@@ -9,7 +9,7 @@ class Manager {
     objMap objects;
 
   public:
-    template <typename SpaceT> std::shared_ptr<SpaceT> AddObj(const std::string &name, v3f pos) {
+    template <typename SpaceT> std::shared_ptr<SpaceT> AddObj(const std::string &name, const v3f &pos) {
         static_assert(std::is_base_of_v<SpaceObj, SpaceT>,
                       "SpaceT must be derived from SpaceObj class");
 
@@ -25,7 +25,7 @@ class Manager {
         return std::static_pointer_cast<SpaceT>(iter->second);
     }
 
-    objMap::iterator GetObj(std::string name) { return objects.find(name); }
+    objMap::iterator GetObj(const std::string &name) { return objects.find(name); }
 
     void Update(float delta) {
         for (auto &[name, obj] : objects) {
@@ -39,5 +39,8 @@ class Manager {
         }
     }
 
-    void RmObj(std::string name) { objects.erase(name); }
+    bool RmObj(const std::string &name) { 
+        size_t erased = objects.erase(name);
+        return erased > 0;
+    }
 };

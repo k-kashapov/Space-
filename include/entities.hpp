@@ -31,7 +31,7 @@ class SpaceObj {
   public:
     std::string name_;
 
-    SpaceObj(std::string name, v3f position) : pos(position), name_(name) {};
+    SpaceObj(const std::string &name, const v3f &position) : pos(position), name_(name) {};
 
     v3f GetPos() const { return pos; }
     void SetPos(const v3f &to) { pos = to; }
@@ -61,7 +61,7 @@ class SpaceObj {
 
     virtual void Draw(sf::RenderWindow &window, const Camera &from) const = 0;
     virtual void Update(float delta) = 0;
-    virtual ~SpaceObj() {};
+    virtual ~SpaceObj() = default;
 };
 
 static const std::initializer_list<v3f> DefaultShipModel = {
@@ -71,14 +71,14 @@ class SpaceShip : public SpaceObj {
     FullMeshModel model;
 
   public:
-    SpaceShip(std::string name, v3f position) : SpaceObj(name, position), model(DefaultShipModel) {}
+    SpaceShip(const std::string &name, const v3f &position) : SpaceObj(name, position), model(DefaultShipModel) {}
 
     void Draw(sf::RenderWindow &window, const Camera &from) const override;
     void Update(float delta) override {
-        pos += basis.as_vec(2) * mov_spd * delta;
+        pos += basis.z() * mov_spd * delta;
 
         float l = norm(ang_spd);
-        if (l > 1e-3) {
+        if (l > EPS) {
             Rotate(ang_spd, l * delta);
             ang_spd /= ang_damp;
         }
@@ -101,13 +101,13 @@ class Camera final : public SpaceObj {
         v3f diff = normalized(a) - normalized(b);
         float l = norm(diff);
 
-        if (l > 1e-5) {
-            Rotate(-a * b, follow_rot_spd * l * delta);
+        if (l > EPS) {
+            Rotate(-a ^ b, follow_rot_spd * l * delta);
         }
     }
 
   public:
-    Camera(std::string name, v3f position) : SpaceObj(name, position) {}
+    Camera(const std::string &name, const v3f &position) : SpaceObj(name, position) {}
 
     void Follow(const SpaceObj *obj) { target = obj; }
 
@@ -123,8 +123,8 @@ class Camera final : public SpaceObj {
 
     void Update(float delta) override {
         m33 tgt_basis = target->GetBasis();
-        v3f tgt_Oy = tgt_basis.as_vec(1);
-        v3f tgt_Oz = tgt_basis.as_vec(2);
+        v3f tgt_Oy = tgt_basis.y();
+        v3f tgt_Oz = tgt_basis.z();
 
         v3f tgt_point = target->GetPos() - follow_dist * (tgt_Oy + tgt_Oz);
 
@@ -132,8 +132,8 @@ class Camera final : public SpaceObj {
         float l = norm(diff);
         Move(diff * l * follow_speed * delta);
 
-        v3f my_Oy = basis.as_vec(1);
-        v3f my_Oz = basis.as_vec(2);
+        v3f my_Oy = basis.y();
+        v3f my_Oz = basis.z();
 
         rotateToMatch(tgt_Oz, my_Oz, delta);
         rotateToMatch(tgt_Oy, my_Oy, delta);

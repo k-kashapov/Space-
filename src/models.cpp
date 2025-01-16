@@ -1,6 +1,6 @@
 #include "models.hpp"
 
-sf::VertexArray FullMeshModel::ToPrimitives2D(std::vector<v2f> screen_space_pts) const {
+sf::VertexArray FullMeshModel::ToPrimitives2D(const std::vector<v2f> &screen_space_pts) const {
     size_t len = screen_space_pts.size();
     sf::VertexArray lines(sf::Lines, (len * (len - 1)));
 
